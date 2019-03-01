@@ -1,0 +1,60 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        release {
+            storeFile file('/Users/zhongliang/Desktop/HantePayDemo_android/app/hante_android_demo.keystore')
+            storePassword 'l1234567'
+            keyAlias 'key0'
+            keyPassword 'l1234567'
+        }
+        debug {
+            storeFile file('/Users/zhongliang/Desktop/HantePayDemo_android/app/hante_android_demo.keystore')
+            storePassword 'l1234567'
+            keyAlias 'key0'
+            keyPassword 'l1234567'
+        }
+    }
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.hante.zhongliang.hantepaydemo_android"
+        minSdkVersion 25
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.release
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+    }
+    productFlavors {
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
+    implementation 'com.alibaba:fastjson:1.2.56'
+    implementation(name: 'alipaySdk-15.5.9-20181123210601', ext: 'aar')
+    implementation 'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:+'
+}
