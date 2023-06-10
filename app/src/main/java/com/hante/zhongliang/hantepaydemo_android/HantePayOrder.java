@@ -16,15 +16,53 @@ import okhttp3.Response;
 
 public class HantePayOrder {
 
+    /**
+     * Hante API 接口地址 (must)
+     *
+     */
     private String hanteApiUrl;
+
+    /**
+     * Hante API 校验Token (must)
+     */
     private String hanteApiToken;
+
+    /**
+     * 收款方式 (must)
+     *  支付宝:alipay
+     *  微信:wechatpay
+     */
     private String vendor;
+
+    /**
+     * 订单号 (must)
+     */
     private String reference;
+
+    /**
+     * 收款金额 (must)
+     */
     private String amount;
+
+    /**
+     * 币种代码 (must)
+     */
     private String currency;
+
+    /**
+     * 收款成回调通知地址 (must)
+     */
     private String ipnUrl;
-    private String desc;//optional
-    private String note;//optional
+
+    /**
+     * 商品描述(optional)
+     */
+    private String desc;
+
+    /**
+     * 订单备注 (optional)
+     */
+    private String note;
 
 
     public String getHanteApiUrl() {
@@ -115,7 +153,10 @@ public class HantePayOrder {
         return new HantePayOrder();
     }
 
-
+    /**
+     * 创建交易记录
+     * @param requestCallBack
+     */
     public void doPost( final HantePayOrder.RequestCallBack requestCallBack){
 
         OkHttpClient okHttpClient = new OkHttpClient();

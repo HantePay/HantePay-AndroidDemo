@@ -29,11 +29,15 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-
+    //支付宝
     private Button aipayActionBtn;
+    //微信
     private Button wechatpayActionBtn;
+    //随机订单号
     private Button generateReferenceActionBtn;
+    //金额
     private EditText amountTF;
+    //订单号
     private EditText referenceTF;
 
 
@@ -46,21 +50,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void initView(){
-        aipayActionBtn = (Button)findViewById(R.id.alipayActionBtn);
-        wechatpayActionBtn = (Button)findViewById(R.id.wechatpayActionBtn);
-        generateReferenceActionBtn = (Button)findViewById(R.id.generateReferencBtn);
+    private void initView() {
+        aipayActionBtn = (Button) findViewById(R.id.alipayActionBtn);
+        wechatpayActionBtn = (Button) findViewById(R.id.wechatpayActionBtn);
+        generateReferenceActionBtn = (Button) findViewById(R.id.generateReferencBtn);
         aipayActionBtn.setOnClickListener(this);
         wechatpayActionBtn.setOnClickListener(this);
         generateReferenceActionBtn.setOnClickListener(this);
 
-        amountTF = (EditText)findViewById(R.id.amountTF);
+        amountTF = (EditText) findViewById(R.id.amountTF);
+        //格式化交易金额
         amountTF.addTextChangedListener(new MoneyTextWatcher(amountTF));
 
-        referenceTF = (EditText)findViewById(R.id.referenceTF);
+        referenceTF = (EditText) findViewById(R.id.referenceTF);
         referenceTF.setFocusable(false);
         referenceTF.setText(generateReference());
-
 
     }
 
@@ -72,26 +76,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              * 对于支付结果，请商户依赖服务端的异步通知结果。同步通知结果，仅作为支付结束的通知。
              */
             Log.d("支付宝支付结果", msg.obj.toString());
-        };
+        }
+
+        ;
     };
 
     @Override
     public void onClick(final View v) {
         // TODO Auto-generated method stub
 
-        switch (v.getId()){
-            case R.id.generateReferencBtn:
-            {
+        switch (v.getId()) {
+            case R.id.generateReferencBtn: //随机订单号
                 referenceTF.setText(generateReference());
-            }
-                break;
-            case R.id.wechatpayActionBtn:
-            case R.id.alipayActionBtn:
-            {
-
+            break;
+            case R.id.wechatpayActionBtn://微信
+            case R.id.alipayActionBtn: //支付宝
+                //组装参数
                 String amountSting = amountTF.getText().toString();
                 Float amount = Float.valueOf(amountSting) * 100;
-                if (amount <= 0){
+                if (amount <= 0) {
                     Log.d("错误！", "onClick: 金额必须大于0");
                     return;
                 }
@@ -100,54 +103,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 HantePayOrder order = HantePayOrder.getInstance();
                 order.setAmount(String.valueOf(reultAmount));
                 order.setReference(referenceTF.getText().toString());
+                //币种代码：模式 USD 美元
                 order.setCurrency("USD");
-
-                if (v.getId() == R.id.alipayActionBtn){
+                //区分收款方式
+                if (v.getId() == R.id.alipayActionBtn) {
                     order.setVendor("alipay");
-                }else {
+                } else {
                     order.setVendor("wechatpay");
                 }
 
                 order.setDesc("Product Description");
                 order.setNote("note for merchant");
+
                 order.setIpnUrl("www.hante.com");
+
                 order.setHanteApiUrl("https://api.hantepay.cn/v1.3/transactions/app/pay");
                 order.setHanteApiToken("123456");
-
+                //创建交易记录
                 order.doPost(new HantePayOrder.RequestCallBack() {
                     @Override
-                    public void successCallBack(final Response response) throws Exception{
+                    public void successCallBack(final Response response) throws Exception {
+                        //创建交易记录成功 启动收款
                         Runnable payRunnable = new Runnable() {
+                            
                             String content = response.body().string();
 
                             @Override
                             public void run() {
-
                                 JSONObject resp = JSONObject.parseObject(content);
                                 String orderInfo = resp.get("orderInfo").toString();
 
-
-                                if (v.getId() == R.id.alipayActionBtn){
+                                if (v.getId() == R.id.alipayActionBtn) {//支付宝
+                                    //调用支付宝
                                     PayTask alipay = new PayTask(MainActivity.this);
-                                    String result = alipay.pay(orderInfo,true);
+                                    String result = alipay.pay(orderInfo, true);
 
                                     Message msg = new Message();
                                     msg.what = 1;
                                     msg.obj = result;
                                     mHandler.sendMessage(msg);
-                                }else  if (v.getId() == R.id.wechatpayActionBtn){
+                                } else if (v.getId() == R.id.wechatpayActionBtn) {//微信
+                                    //调用微信
                                     IWXAPI iwxapi = WXAPIFactory.createWXAPI(MainActivity.this, "wx1f8a7ce87240cdfd");
-
                                     JSONObject orderInfoJson = JSONObject.parseObject(orderInfo);
                                     PayReq req = new PayReq();
-                                    req.appId			= orderInfoJson.getString("appid");
-                                    req.partnerId		= orderInfoJson.getString("partnerid");
-                                    req.prepayId		= orderInfoJson.getString("prepayid");
-                                    req.packageValue	= orderInfoJson.getString("package");
-                                    req.nonceStr		= orderInfoJson.getString("noncestr");
-                                    req.timeStamp		= orderInfoJson.getString("timestamp");
-                                    req.sign			= orderInfoJson.getString("sign");
-                                    req.extData			= "app data"; // optional
+                                    req.appId = orderInfoJson.getString("appid");
+                                    req.partnerId = orderInfoJson.getString("partnerid");
+                                    req.prepayId = orderInfoJson.getString("prepayid");
+                                    req.packageValue = orderInfoJson.getString("package");
+                                    req.nonceStr = orderInfoJson.getString("noncestr");
+                                    req.timeStamp = orderInfoJson.getString("timestamp");
+                                    req.sign = orderInfoJson.getString("sign");
+                                    req.extData = "app data"; // optional
                                     iwxapi.sendReq(req);
                                 }
 
@@ -160,41 +167,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     @Override
                     public void errorCallBack(String errorString) {
-                        Log.d("请求失败", "errorCallBack: "+ errorString);
+                        Log.d("请求失败", "errorCallBack: " + errorString);
 
                     }
                 });
 
-
-
-            }
             break;
-            default:
-                break;
         }
 
     }
 
-    private void Pay(int action_id){
-    }
-
-    private String generateReference(){
-
+    /**
+     * 随机订单号
+     * 规则：
+     *      时间戳+ 随机6位字符
+     * @return
+     */
+    private String generateReference() {
+        //时间戳
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+        String reference = df.format(new Date());
+
         String chars = "abcdefghijklmnopqrstuvwxyz";
-
-        String reference  = df.format(new Date());
+        //随机6位字符
         String signChar = "";
-        for (int i = 0 ;i < 6 ; i++){
-            int index = (int)(1+Math.random()*(chars.length()-1-1+1));
-            signChar = signChar + chars.substring(index, index+1);
+        for (int i = 0; i < 6; i++) {
+            int index = (int) (1 + Math.random() * (chars.length() - 1 - 1 + 1));
+            signChar = signChar + chars.substring(index, index + 1);
         }
-
-        reference = reference + signChar;
-
-
-
-        return reference;
+        //时间戳+ 随机6位字符
+        return reference + signChar;
     }
 
 
@@ -211,8 +213,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
+    /**
+     * 格式化交易金额
+     */
     public class MoneyTextWatcher implements TextWatcher {
         private EditText editText;
         private int digits = 2;
@@ -220,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public MoneyTextWatcher(EditText et) {
             editText = et;
         }
+
         public MoneyTextWatcher setDigits(int d) {
             digits = d;
             return this;
@@ -237,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (s.toString().contains(".")) {
                 if (s.length() - 1 - s.toString().indexOf(".") > digits) {
                     s = s.toString().subSequence(0,
-                            s.toString().indexOf(".") + digits+1);
+                            s.toString().indexOf(".") + digits + 1);
                     editText.setText(s);
                     editText.setSelection(s.length()); //光标移到最后
                 }
@@ -265,9 +269,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     }
-
-
-
 
 
 }
